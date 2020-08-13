@@ -1,3 +1,4 @@
 # Package Manager
 resources/
 *.pyc
+frontend/node_modules/
