@@ -35,17 +35,20 @@ def home():
 def search_by_company_id():
     search_json = request.get_json()
     if search_json is None:
-        return error_response("bad arguments", 400)
+        return error_response("Bad arguments", 400)
     cik = search_json['cik']
     if cik is None:
         return error_response("Company Id missing", 400)
     form_type = search_json['type']
     try:
-        endpoint_response = endpoint_search_by_company_id(cik, form_type)
-        # print(endpoint_response)
-        if not endpoint_response:
-            return error_response("Failed to request data from endpoint", 400)
-        return jsonify(endpoint_response)
+        status, response = endpoint_search_by_company_id(cik, form_type)
+        if not status:
+            return error_response(response, 400)
+        
+        if len(response) == 0:
+            return error_response("No record found", 200)
+        
+        return jsonify(response)
     except Exception:
         error_response('Failed to retrieve data', 400)
 
