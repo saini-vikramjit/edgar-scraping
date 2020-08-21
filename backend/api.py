@@ -1,6 +1,7 @@
 import copy
 import logging
 import os
+import sys
 
 from flask import request, jsonify, send_from_directory
 from flask import Flask
@@ -9,6 +10,19 @@ from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 
 from request import endpoint_search_by_company_id
+
+
+port = 5001
+debug = False
+
+if len(sys.argv) > 1:
+    port = sys.argv[1]
+    if not port.isdigit():
+        print(f'Bad port: {port}.')
+        sys.exit(-1)
+    if len(sys.argv) > 2:
+        t = sys.argv[2].lower()
+        debug = True if t == 'dev' else False
 
 app = Flask(__name__)
 COMPRESS_MIMETYPES = [
@@ -53,5 +67,24 @@ def search_by_company_id():
         error_response('Failed to retrieve data', 400)
 
 
+@app.route('/api/get-filing-details', methods=['POST'])
+@cross_origin()
+def get_filing_details():
+    search_json = request.get_json()
+    if search_json is None:
+        return error_response("Bad arguments", 400)
+    cik = search_json['cik']
+    if cik is None:
+        return error_response("Company Id missing", 400)
+    accession_number = search_json['accessionNumber']
+    if accession_number is None:
+        return error_response("Accession number missing", 400)
+    try:
+        # code to implement
+        
+        return jsonify(search_json)
+    except Exception:
+        error_response('Failed to retrieve data', 400)
+
 if __name__ == '__main__':
-    app.run(host='localhost', port=5001, debug=True)
+    app.run(host='localhost', port=port, debug=debug)
