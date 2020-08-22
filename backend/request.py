@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from utils import check_none
+from utils import check_none, remove_hyphen, create_url, filter_record
 
 def endpoint_search_by_company_id(cik, form_type):
     
@@ -79,6 +79,40 @@ def endpoint_search_by_company_id(cik, form_type):
             master_list_xml.append(entry_dict)
 
         return (True, master_list_xml)
+    except Exception as e:
+        #return (False, "Error occured during request processing")
+        return (False, str(e))
+
+
+def fetch_filing_details(cik, accession_number):
+    
+    try:
+        # Creating the url
+        endpoint = r"https://www.sec.gov/Archives/edgar/data"
+        url = create_url(endpoint, [cik, remove_hyphen(accession_number), 'index.json'])
+
+        # Calling the url
+        response = requests.get(url = url)
+        response_json = response.json()
+        # print(response_json)
+
+        # add check for response json
+
+        # Filtering the response json
+        filter_data = filter_record(response_json['directory']['item'])
+
+        # add check for the filter
+
+        # Creating the "DEF 14A" filing url
+        filing_url = create_url(endpoint, [cik, filter_data['name']])
+        print(filing_url)
+
+        # Calling the filing url
+        filing_response = requests.get(url = filing_url)
+        soup = BeautifulSoup(filing_response.content, 'lxml')
+        
+        return (True, filing_url)
+
     except Exception as e:
         #return (False, "Error occured during request processing")
         return (False, str(e))

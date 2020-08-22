@@ -9,7 +9,7 @@ from flask_compress import Compress
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 
-from request import endpoint_search_by_company_id
+from request import endpoint_search_by_company_id, fetch_filing_details
 
 
 port = 5001
@@ -80,9 +80,11 @@ def get_filing_details():
     if accession_number is None:
         return error_response("Accession number missing", 400)
     try:
-        # code to implement
-        
-        return jsonify(search_json)
+        status, response = fetch_filing_details(cik, accession_number)
+        if not status:
+            return error_response(response, 400)
+
+        return jsonify(response)
     except Exception:
         error_response('Failed to retrieve data', 400)
 
