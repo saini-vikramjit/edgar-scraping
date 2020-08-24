@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -110,6 +111,67 @@ def fetch_filing_details(cik, accession_number):
         # Calling the filing url
         filing_response = requests.get(url = filing_url)
         soup = BeautifulSoup(filing_response.content, 'lxml')
+
+        #file = open("soup.txt","w")
+        #file.write(soup.prettify())
+        #file.close()
+
+        # Parsing the filing txt
+        # define a dictionary that will house all filings.
+        master_filings_dict = {}
+
+        # add a new level to our master_filing_dict, this will also be a dictionary.
+        master_filings_dict[accession_number] = {}
+
+        # this dictionary will contain two keys, the sec header content, and a documents key.
+        master_filings_dict[accession_number]['sec_header_content'] = {}
+        master_filings_dict[accession_number]['filing_documents'] = None
+
+        # grab the sec-header tag, so we can store it in the master filing dictionary.
+        sec_header_tag = soup.find('sec-header')
+
+        # store the tag in the dictionary just as is.
+        master_filings_dict[accession_number]['sec_header_content']['sec_header_code'] = sec_header_tag
+
+        # display the sec header tag, so you can see how it looks.
+        # print(sec_header_tag)
+
+        master_document_dict = {}
+
+        # find all the documents in the filing.
+        for filing_document in soup.find_all('document'):
+            
+            # define the document type, found under the <type> tag, this will serve as our key for the dictionary.
+            document_id = filing_document.type.find(text=True, recursive=False).strip()
+            
+            # here are the other parts if you want them.
+            document_sequence = filing_document.sequence.find(text=True, recursive=False).strip()
+            document_description = filing_document.description.find(text=True, recursive=False).strip()
+            
+            # initalize our document dictionary
+            master_document_dict[document_id] = {}
+            
+            # add the different parts, we parsed up above.
+            master_document_dict[document_id]['document_sequence'] = document_sequence
+            master_document_dict[document_id]['document_description'] = document_description
+
+            # store the document itself, this portion extracts the HTML code. We will have to reparse it later.
+            #master_document_dict[document_id]['document_code'] = filing_document.extract()
+            
+            
+            # grab the text portion of the document, this will be used to split the document into pages.
+            filing_doc_text = filing_document.find('text').extract()
+            
+            page_document = filing_doc_text.find('page')
+
+            table_document = page_document.find_all('table')
+            print(len(table_document))
+            for table in table_document:
+                print("#########################")
+                print(table)
+                
+            
+            #print(all_page_numbers)
         
         return (True, filing_url)
 
